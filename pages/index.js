@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full text-white relative overflow-hidden">
       {/* Transparan arka plan görseli */}
-      <div className="absolute inset-0 z-0" style={{ backgroundImage: 'url(/CEPHE.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+      <div className="absolute inset-0 z-0" style={{ backgroundImage: 'url(/CEPHE.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
       <Head>
         <title>AdaWall AI - Yenilikçi AI Çözümleri</title>
         <meta name="description" content="AdaWall AI - Yapay Zeka Destekli İş ve Eğitim Çözümleri" />

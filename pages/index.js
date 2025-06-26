@@ -22,7 +22,7 @@ export default function Home() {
     {
       name: 'AdaDesign',
       description: 'Fransız mağazalarının mimari çizimleri ve tasarımları profesyonel olarak hazırlanır.',
-      url: 'https://design.adawall.com',
+      url: 'https://design.adawallai.com',
       icon: '🎨',
       features: ['Fransız mağaza mimari çizimi', 'Profesyonel tasarım', 'Özel proje danışmanlığı']
     }

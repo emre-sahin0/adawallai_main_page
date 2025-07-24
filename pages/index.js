@@ -1,11 +1,113 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [activeProject, setActiveProject] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
   const [navOpen, setNavOpen] = useState(false); // Hamburger menü için
+  const [chatOpen, setChatOpen] = useState(false);
+  const [showChatBubble, setShowChatBubble] = useState(true); // Başlangıçta true yap
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: 'Merhaba! Ben AdaWall AI asistanınız. Size şirketimiz, projelerimiz ve duvar kağıdı koleksiyonlarımız hakkında bilgi verebilirim. Nasıl yardımcı olabilirim?'
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Sayfa yüklendiğinde baloncuk göster - artık gerek yok çünkü başlangıçta true
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setShowChatBubble(true);
+  //   }, 500); // 0.5 saniye sonra baloncuk görünür
+
+  //   return () => clearTimeout(timer);
+  // }, []);
+
+  // Otomatik açılmayı kaldır, sadece baloncuk göster
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setChatOpen(true);
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
+
+  // AdaWall bilgileri
+  const adawallInfo = {
+    company: {
+      name: 'AdaWall',
+      description: 'Türkiye\'nin en büyük duvar kağıdı üreticisi',
+      address: 'Yeni Mahalle İncirlik Blv. No:27, Adana',
+      phone: '+90 322 332 68 68',
+      whatsapp: '+90 549 797 87 44',
+      email: 'info@adawall.com.tr',
+      website: 'https://www.adawall.com.tr/',
+      experience: '10+ yıllık deneyim',
+      countries: '120 ülkede ürün satışı',
+      distributors: '103 ülkeden distribütör'
+    },
+    collections: [
+      'MONETA POSTER Murals Collection',
+      'Ada Kids Wallpaper Collection',
+      'INDIGO Wallpaper Collection', 
+      'KALINKA Wallpaper Collection',
+      'RUMI Wallpaper collection',
+      'ANKA Wallpaper Collection',
+      'TROPICANO Collection'
+    ],
+    features: [
+      'Modern tasarımlar',
+      'Derin işleme tekniği',
+      'Doğa dostu üretim',
+      'Kaliteli hizmet',
+      'ISO 9001:2015, 14001:2015, OHSAS 18001:2007 sertifikaları',
+      'Bayilik sistemi mevcut'
+    ]
+  };
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage = inputMessage;
+    setInputMessage('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      // Gemini API çağrısı (ücretsiz tier)
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          adawallInfo: adawallInfo
+        }),
+      });
+
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Üzgünüm, şu anda size yardımcı olamıyorum. Lütfen daha sonra tekrar deneyin.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
   const projects = [
     {
@@ -660,7 +762,117 @@ export default function Home() {
         </div>
       </footer>
 
-             <style jsx global>{`
+      {/* Chatbot */}
+      {showChatBubble && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {/* Speech Bubble - sadece chat kapalıyken göster */}
+          {!chatOpen && (
+            <div className="absolute bottom-20 right-2 bg-white text-gray-800 px-4 py-2 rounded-lg shadow-lg border border-gray-200 whitespace-nowrap animate-pulse">
+              <div className="text-sm font-medium">Size nasıl yardımcı olabilirim? 💬</div>
+              {/* Bubble Arrow */}
+              <div className="absolute top-full right-6 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+            </div>
+          )}
+          
+          {/* Chat Button */}
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className={`bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white p-5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 transform ${!chatOpen ? 'animate-bounce' : ''}`}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </button>
+
+          {/* Chat Window */}
+          {chatOpen && (
+            <div className="absolute bottom-20 right-0 w-96 h-[500px] bg-gray-900 rounded-lg shadow-2xl border border-gray-700 flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                      <span className="text-cyan-600 font-bold text-sm">A</span>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">AdaWall AI</h3>
+                      <p className="text-cyan-100 text-xs">Çevrimiçi</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setChatOpen(false)}
+                    className="text-white hover:text-gray-200 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        message.role === 'user'
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-100'
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                    </div>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-700 text-gray-100 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        </div>
+                        <span className="text-sm">Yazıyor...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input */}
+              <div className="p-4 border-t border-gray-700">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Mesajınızı yazın..."
+                    className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                    disabled={isLoading}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={isLoading || !inputMessage.trim()}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-all duration-300"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <style jsx global>{`
          @keyframes fade-in {
            from { opacity: 0; transform: translateY(20px); }
            to { opacity: 1; transform: translateY(0); }
